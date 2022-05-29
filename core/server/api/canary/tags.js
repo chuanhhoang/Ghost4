@@ -3,7 +3,11 @@ const tpl = require('@tryghost/tpl');
 const errors = require('@tryghost/errors');
 const models = require('../../models');
 
-const ALLOWED_INCLUDES = ['count.posts'];
+// const ALLOWED_INCLUDES = ['count.posts'];
+//hack
+//We don't allow counts of posts with tags
+const ALLOWED_INCLUDES = [];
+// const ALLOWED_INCLUDES = ['count.posts'];
 
 const messages = {
     tagNotFound: 'Tag not found.'

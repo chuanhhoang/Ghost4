@@ -12,6 +12,7 @@ module.exports = () => {
     // Wrap the admin and API apps into a single express app for use with vhost
     const backendApp = express('backend');
 
+    backendApp.set('trust proxy', 1);
     backendApp.lazyUse(BASE_API_PATH, require('../api'));
     backendApp.lazyUse('/ghost/oauth', require('../oauth'));
     backendApp.lazyUse('/ghost/.well-known', require('../well-known'));

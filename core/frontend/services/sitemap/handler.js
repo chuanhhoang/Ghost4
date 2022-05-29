@@ -13,32 +13,46 @@ module.exports = function handler(siteApp) {
         next();
     };
 
-    siteApp.get('/sitemap.xml', function sitemapXML(req, res) {
+    // siteApp.get('/sitemap.xml', function sitemapXML(req, res) {
+    siteApp.get('/sitemap.xml', function sitemapXML(req, res, next) {
         res.set({
             'Cache-Control': 'public, max-age=' + config.get('caching:sitemap:maxAge'),
             'Content-Type': 'text/xml'
         });
 
-        res.send(manager.getIndexXml());
+        // res.send(manager.getIndexXml());
+        let author = "";
+        if (req.subdomains) {
+            if (req.subdomains.length > 0) {
+                author = req.subdomains[0];
+            }
+        }
+        let result = manager.getIndexXml(author);
+        res.send(result);        
     });
 
-    siteApp.get('/sitemap-:resource.xml', verifyResourceType, function sitemapResourceXML(req, res) {
-        const type = req.params.resource.replace(/-\d+$/, '');
-        const pageParam = (req.params.resource.match(/-(\d+)$/) || [null, null])[1];
-        const page = pageParam ? parseInt(pageParam, 10) : 1;
+    siteApp.get('/sitemap-:resource.xml', verifyResourceType, async function sitemapResourceXML(req, res, next) {
+        try {
+            const type = req.params.resource;
+            const page = 1;
 
-        const content = manager.getSiteMapXml(type, page);
-        // Prevent x-1.xml as it is a duplicate of x.xml and empty sitemaps
-        // (except for the first page so that at least one sitemap exists per type)
-        if (pageParam === '1' || (!content && page !== 1)) {
-            return res.sendStatus(404);
+            res.set({
+                'Cache-Control': 'public, max-age=' + config.get('caching:sitemap:maxAge'),
+                'Content-Type': 'text/xml'
+            });
+
+            let author = "";
+            if (req.subdomains) {
+                if (req.subdomains.length > 0) {
+                    author = req.subdomains[0];
+                }
+            }
+
+            let result = await manager.getSiteMapXml(type, author);
+            res.send(result);
         }
-
-        res.set({
-            'Cache-Control': 'public, max-age=' + config.get('caching:sitemap:maxAge'),
-            'Content-Type': 'text/xml'
-        });
-
-        res.send(content);
+        catch (error) {
+            next(error);
+        }
     });
 };

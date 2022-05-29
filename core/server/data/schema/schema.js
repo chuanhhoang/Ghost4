@@ -49,7 +49,7 @@ module.exports = {
         comment_id: {type: 'string', maxlength: 50, nullable: true},
         plaintext: {type: 'text', maxlength: 1000000000, fieldtype: 'long', nullable: true},
         feature_image: {type: 'string', maxlength: 2000, nullable: true},
-        featured: {type: 'bool', nullable: false, defaultTo: false},
+        featured: {type: 'bool', nullable: false, defaultTo: false, index: true},
         type: {type: 'string', maxlength: 50, nullable: false, defaultTo: 'post', validations: {isIn: [['post', 'page']]}},
         status: {type: 'string', maxlength: 50, nullable: false, defaultTo: 'draft'},
         // NOTE: unused at the moment and reserved for future features
@@ -172,8 +172,8 @@ module.exports = {
     },
     roles_users: {
         id: {type: 'string', maxlength: 24, nullable: false, primary: true},
-        role_id: {type: 'string', maxlength: 24, nullable: false},
-        user_id: {type: 'string', maxlength: 24, nullable: false}
+        role_id: {type: 'string', maxlength: 24, nullable: false, references: 'roles.id'},
+        user_id: {type: 'string', maxlength: 24, nullable: false, references: 'users.id'}
     },
     permissions: {
         id: {type: 'string', maxlength: 24, nullable: false, primary: true},

@@ -73,12 +73,12 @@ class SiteMapManager {
         return new TagsMapGenerator(options);
     }
 
-    getIndexXml() {
-        return this.index.getXml();
+    getIndexXml(author) {
+        return this.index.getXml(author);
     }
 
-    getSiteMapXml(type, page) {
-        return this[type].getXml(page);
+    async getSiteMapXml(type, author) {
+        return this[type].getXml(author);
     }
 }
 

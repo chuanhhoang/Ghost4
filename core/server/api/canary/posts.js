@@ -39,6 +39,27 @@ module.exports = {
             unsafeAttrs: unsafeAttrs
         },
         query(frame) {
+            //hack
+            //We don't allow to display posts for multile users at a same time because we have millions users
+            if (frame.options.filter && (frame.options.filter.indexOf("authors:[") != -1)) {
+                return null;
+            }
+            if (frame.user && frame.user.attributes && frame.user.attributes.slug) {
+                if (frame.options.filter) {                   
+                    if (frame.options.filter.indexOf("authors:") != -1) {
+                        if (frame.options.filter.indexOf("authors:" + frame.user.attributes.slug) == -1) {
+                            return null;
+                        }
+                    } else {
+                        frame.options.filter = "authors:" + frame.user.attributes.slug;
+                    }
+                } else {
+                    frame.options.filter = "authors:" + frame.user.attributes.slug;
+                }
+            } else {
+                return null;
+            }
+                        
             return models.Post.findPage(frame.options);
         }
     },
@@ -156,6 +177,15 @@ module.exports = {
             unsafeAttrs: unsafeAttrs
         },
         async query(frame) {
+            //hack
+            //We only allow to submit posts with exiting tags
+            let submittedTags = frame.data.posts[0].tags;
+            submittedTags = frame.data.posts[0].tags.filter((tag) => {
+                return tag.id;
+            })
+
+            frame.data.posts[0].tags = submittedTags;
+
             let model = await postsService.editPost(frame);
 
             this.headers.cacheInvalidate = postsService.handleCacheInvalidation(model);

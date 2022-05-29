@@ -260,7 +260,7 @@ async function initServices({config}) {
     const stripe = require('./server/services/stripe');
     const members = require('./server/services/members');
     const permissions = require('./server/services/permissions');
-    const xmlrpc = require('./server/services/xmlrpc');
+    // const xmlrpc = require('./server/services/xmlrpc');
     const slack = require('./server/services/slack');
     const {mega} = require('./server/services/mega');
     const webhooks = require('./server/services/webhooks');
@@ -282,7 +282,7 @@ async function initServices({config}) {
     await Promise.all([
         members.init(),
         permissions.init(),
-        xmlrpc.listen(),
+        // xmlrpc.listen(),
         slack.listen(),
         mega.listen(),
         webhooks.listen(),

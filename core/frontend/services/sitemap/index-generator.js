@@ -3,6 +3,7 @@ const xml = require('xml');
 const moment = require('moment');
 const urlUtils = require('../../../shared/url-utils');
 const localUtils = require('./utils');
+const urlHandle = require('url');
 
 const XMLNS_DECLS = {
     _attr: {
@@ -17,8 +18,8 @@ class SiteMapIndexGenerator {
         this.maxPerPage = options.maxPerPage;
     }
 
-    getXml() {
-        const urlElements = this.generateSiteMapUrlElements();
+    getXml(author) {
+        const urlElements = this.generateSiteMapUrlElements(author);
 
         const data = {
             // Concat the elements to the _attr declaration
@@ -26,30 +27,36 @@ class SiteMapIndexGenerator {
         };
 
         // Return the xml
-        return localUtils.getDeclarations() + xml(data);
+        return localUtils.getDeclarations(author) + xml(data);
     }
 
-    generateSiteMapUrlElements() {
-        return _.map(this.types, (resourceType) => {
-            // `|| 1` = even if there are no items we still have an empty sitemap file
-            const noOfPages = Math.ceil(Object.keys(resourceType.nodeLookup).length / this.maxPerPage) || 1;
-            const pages = [];
+    generateSiteMapUrlElements(author) {
+        return _.map(_.filter(this.types, (resourceType) => {
+            if (author) {
+                if (resourceType.name == "pages" || resourceType.name == "authors" || resourceType.name == "tags") {
+                    return false;
+                }
+            }
+            return true;
+        }), (resourceType) => {
+            let url = urlUtils.urlFor({relativeUrl: '/sitemap-' + resourceType.name + '.xml'}, true);
 
-            for (let i = 0; i < noOfPages; i++) {
-                const page = i === 0 ? '' : `-${i + 1}`;
-                const url = urlUtils.urlFor({relativeUrl: '/sitemap-' + resourceType.name + page + '.xml'}, true);
-                const lastModified = resourceType.lastModified;
-
-                pages.push({
-                    sitemap: [
-                        {loc: url},
-                        {lastmod: moment(lastModified).toISOString()}
-                    ]
-                });
+            if (author) {
+                let urlObj = urlHandle.parse(url, true, true);
+                urlObj.hostname = author + "." + urlObj.hostname;
+                urlObj.host = author + "." + urlObj.host;
+                url = urlHandle.format(urlObj);
             }
 
-            return pages;
-        }).flat();
+            const lastModified = resourceType.lastModified;
+
+            return {
+                sitemap: [
+                    {loc: url},
+                    {lastmod: moment(lastModified).toISOString()}
+                ]
+            };
+        });
     }
 }
 

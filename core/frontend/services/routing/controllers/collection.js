@@ -22,6 +22,13 @@ const messages = {
 module.exports = function collectionController(req, res, next) {
     debug('collectionController beging', req.params, res.routerOptions);
 
+    //hack
+    //If this is a subdomain link, then all links from root will be redirected to author page
+    if (req.subdomains.length > 0) {        
+        return res.redirect(301, "/author/" + req.subdomains[0]);
+    }   
+
+
     const pathOptions = {
         page: req.params.page !== undefined ? req.params.page : 1,
         slug: req.params.slug ? security.string.safe(req.params.slug) : undefined
@@ -49,6 +56,10 @@ module.exports = function collectionController(req, res, next) {
         }
     }
 
+    //hack
+    //We only display featured posts because, when we have millions of posts, it is very slow to get the last X posts
+    res.routerOptions.filter = "featured:true";    
+
     debug('fetching data');
     return dataService.fetchData(pathOptions, res.routerOptions, res.locals)
         .then(function handleResult(result) {
@@ -72,13 +83,15 @@ module.exports = function collectionController(req, res, next) {
              *
              * People should always invert their filters to ensure that the database query loads unique posts per collection.
              */
-            result.posts = _.filter(result.posts, (post) => {
-                if (routerManager.owns(res.routerOptions.identifier, post.id)) {
-                    return post;
-                }
+            
+            //hack should not check anything            
+            // result.posts = _.filter(result.posts, (post) => {
+            //     if (routerManager.owns(res.routerOptions.identifier, post.id)) {
+            //         return post;
+            //     }
 
-                debug(`'${post.slug}' is not owned by this collection`);
-            });
+            //     debug(`'${post.slug}' is not owned by this collection`);
+            // });
 
             // Format data 1
             // @TODO: See renderer/secure for explanation.

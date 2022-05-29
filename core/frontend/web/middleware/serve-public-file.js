@@ -5,6 +5,7 @@ const errors = require('@tryghost/errors');
 const config = require('../../../shared/config');
 const urlUtils = require('../../../shared/url-utils');
 const tpl = require('@tryghost/tpl');
+const urlHandle = require("url");
 
 const messages = {
     imageNotFound: 'Image not found',
@@ -27,6 +28,8 @@ function matchCacheKey(req, cache) {
 }
 
 function createPublicFileMiddleware(location, file, mime, maxAge) {
+    let cachedContent;
+
     let cache;
     // These files are provided by Ghost, and therefore live inside of the core folder
     const staticFilePath = config.get('paths').publicFilePath;
@@ -38,7 +41,12 @@ function createPublicFileMiddleware(location, file, mime, maxAge) {
     const filePath = file.match(/^public/) ? path.join(locationPath, file.replace(/^public/, '')) : path.join(locationPath, file);
     const blogRegex = /(\{\{blog-url\}\})/g;
 
-    return function servePublicFileMiddleware(req, res, next) {
+    return function servePublicFileMiddleware(req, res, next) {        
+        if (cachedContent) {
+            res.writeHead(200, cachedContent.headers);
+            return res.end(cachedContent.body);
+        }
+
         if (cache && matchCacheKey(req, cache)) {
             res.writeHead(200, cache.headers);
             return res.end(cache.body);
@@ -79,7 +87,21 @@ function createPublicFileMiddleware(location, file, mime, maxAge) {
             let str = buf.toString();
 
             if (mime === 'text/xsl' || mime === 'text/plain' || mime === 'application/javascript') {
-                str = str.replace(blogRegex, urlUtils.urlFor('home', true).replace(/\/$/, ''));
+                // str = str.replace(blogRegex, urlUtils.urlFor('home', true).replace(/\/$/, ''));
+                console.log("hack - tao dang vao day ne");
+                let blogUrl = urlUtils.urlFor('home', true);
+
+                if (req.subdomains) {
+                    if (req.subdomains.length > 0) {
+                        let author = req.subdomains[0];
+                        let urlObj = urlHandle.parse(blogUrl, true, true);
+                        urlObj.hostname = author + "." + urlObj.hostname;
+                        urlObj.host = author + "." + urlObj.host;
+                        blogUrl = urlHandle.format(urlObj);
+                    }
+                }
+
+                str = str.replace(blogRegex, blogUrl.replace(/\/$/, ''));                
             }
 
             cache = {
@@ -92,6 +114,10 @@ function createPublicFileMiddleware(location, file, mime, maxAge) {
                 body: str,
                 key: req.query && req.query.v ? req.query.v : null
             };
+
+            if (filePath.indexOf("sitemap") == -1 && filePath.indexOf("robots.txt") == -1) {
+                cachedContent = cache;
+            }
 
             res.writeHead(200, cache.headers);
             res.end(cache.body);

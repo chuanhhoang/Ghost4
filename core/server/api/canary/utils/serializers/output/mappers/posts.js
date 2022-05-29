@@ -26,7 +26,9 @@ module.exports = async (model, frame, options = {}) => {
 
     const jsonModel = model.toJSON(extendedOptions);
 
-    url.forPost(model.id, jsonModel, frame);
+    //hack
+    // url.forPost(model.id, jsonModel, frame);
+    url.forPostWithData(jsonModel, jsonModel, frame);
 
     extraAttrs.forPost(frame, model, jsonModel);
 

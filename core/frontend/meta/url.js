@@ -26,15 +26,22 @@ function getUrl(data, absolute) {
          *
          * A long term solution should be part of the final version of Dynamic Routing.
          */
-        if (data.status !== 'published' && urlService.getUrlByResourceId(data.id) === '/404/') {
+        // if (data.status !== 'published' && urlService.getUrlByResourceId(data.id) === '/404/') {
+        if (data.status !== 'published' && urlService.getUrlByResource(data, "posts") === '/404/') {
             return urlUtils.urlFor({relativeUrl: urlUtils.urlJoin('/p', data.uuid, '/'), secure: data.secure}, null, absolute);
         }
 
-        return urlService.getUrlByResourceId(data.id, {secure: data.secure, absolute: absolute, withSubdirectory: true});
+        // return urlService.getUrlByResourceId(data.id, {secure: data.secure, absolute: absolute, withSubdirectory: true});
+        return urlService.getUrlByResource(data, "posts", {secure: data.secure, absolute: absolute, withSubdirectory: true});
     }
 
-    if (checks.isTag(data) || checks.isUser(data)) {
-        return urlService.getUrlByResourceId(data.id, {secure: data.secure, absolute: absolute, withSubdirectory: true});
+    if (checks.isTag(data)) {
+        // return urlService.getUrlByResourceId(data.id, {secure: data.secure, absolute: absolute, withSubdirectory: true});
+        return urlService.getUrlByResource(data, "tags", {secure: data.secure, absolute: absolute, withSubdirectory: true});
+    }
+
+    if (schema.isUser(data)) {
+        return urlService.getUrlByResource(data, "authors", {secure: data.secure, absolute: absolute, withSubdirectory: true});
     }
 
     if (checks.isNav(data)) {

@@ -20,6 +20,10 @@ module.exports = function (Bookshelf) {
          * We could embedd adding actions more nicely in the future e.g. plugin.
          */
         addAction: (model, event, options) => {
+
+            //hack we don't want to save any actions
+            return;
+                        
             if (!model.wasChanged()) {
                 return;
             }

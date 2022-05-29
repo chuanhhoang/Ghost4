@@ -45,6 +45,12 @@ module.exports = function entryController(req, res, next) {
                 return urlUtils.redirectToAdmin(302, res, `/#/editor/${resourceType}/${entry.id}`);
             }
 
+            //hack
+            //If this is a post and we don't have any submain, then we will not display the post, only if the entry is page, we will display it
+            if ((req.subdomains.length == 0) && (entry.type == 'post')) {
+                return next();
+            }            
+
             /**
              * CASE: check if type of router owns this resource
              *
@@ -61,10 +67,12 @@ module.exports = function entryController(req, res, next) {
              *
              * That's why we have to check against the router type.
              */
-            if (routerManager.getResourceById(entry.id).config.type !== res.routerOptions.resourceType) {
-                debug('not my resource type');
-                return next();
-            }
+
+            //hack we should not check this
+            // if (routerManager.getResourceById(entry.id).config.type !== res.routerOptions.resourceType) {
+            //     debug('not my resource type');
+            //     return next();
+            // }
 
             /**
              * CASE: Permalink is not valid anymore, we redirect him permanently to the correct one
@@ -75,14 +83,16 @@ module.exports = function entryController(req, res, next) {
              *
              * Ensure we redirect to the correct post url including subdirectory.
              */
-            if (urlUtils.absoluteToRelative(entry.url, {withoutSubdirectory: true}) !== req.path) {
-                debug('redirect');
 
-                return urlUtils.redirect301(res, url.format({
-                    pathname: url.parse(entry.url).pathname,
-                    search: url.parse(req.originalUrl).search
-                }));
-            }
+            //hack it should not happen
+            // if (urlUtils.absoluteToRelative(entry.url, {withoutSubdirectory: true}) !== req.path) {
+            //     debug('redirect');
+
+            //     return urlUtils.redirect301(res, url.format({
+            //         pathname: url.parse(entry.url).pathname,
+            //         search: url.parse(req.originalUrl).search
+            //     }));
+            // }
 
             renderer.secure(req, entry);
 

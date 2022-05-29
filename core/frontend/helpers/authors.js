@@ -10,6 +10,7 @@ const {urlService} = require('../services/proxy');
 const {SafeString, escapeExpression, templates} = require('../services/handlebars');
 const isString = require('lodash/isString');
 const {utils} = require('@tryghost/helpers');
+const urlHandle = require('url');
 
 module.exports = function authors(options = {}) {
     options.hash = options.hash || {};
@@ -33,8 +34,16 @@ module.exports = function authors(options = {}) {
 
     function createAuthorsList(authorsList) {
         function processAuthor(author) {
+            let url = urlService.getUrlByResource(author, "authors", {absolute: true, withSubdirectory: true});
+            let urlObj = urlHandle.parse(url, true, true);
+            let subdomain = author.slug;
+            urlObj.hostname = subdomain + "." + urlObj.hostname;
+            urlObj.host = subdomain + "." + urlObj.host;
+            url = urlHandle.format(urlObj);
+
             return autolink ? templates.link({
-                url: urlService.getUrlByResourceId(author.id, {withSubdirectory: true}),
+                // url: urlService.getUrlByResourceId(author.id, {withSubdirectory: true}),
+                url: url,
                 text: escapeExpression(author.name)
             }) : escapeExpression(author.name);
         }

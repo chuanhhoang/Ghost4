@@ -8,6 +8,7 @@ const Queue = require('./Queue');
 const Urls = require('./Urls');
 const Resources = require('./Resources');
 const urlUtils = require('../../../shared/url-utils');
+const urlHandle = require('url');
 
 // This listens to services.themes.api.changed, routing events, and it's own queue events
 const events = require('../../lib/common/events');
@@ -218,7 +219,9 @@ class UrlService {
      * @returns {boolean}
      */
     hasFinished() {
-        return this.finished;
+        //hack
+        return true;
+        // return this.finished;
     }
 
     /**
@@ -262,6 +265,71 @@ class UrlService {
 
         return '/404/';
     }
+
+    //hack
+    modifyUrlWithSubdomain(url, type, resource) {        
+        if (type == "posts") {                
+            let urlObj = urlHandle.parse(url, true, true);                    
+            // if (resource.type == 'post') {  
+            if (resource.primary_author) {                
+                let subdomain = resource.primary_author.slug;              
+                urlObj.hostname = subdomain + "." + urlObj.hostname;
+                urlObj.host = subdomain + "." + urlObj.host;
+                // console.log("Shit you", urlObj);
+                url = urlHandle.format(urlObj);
+            }                
+            // }
+        }
+        return url;                        
+    }
+    
+    //hack
+    getUrlByResource(resource, type, options) {
+        // debug("urlService", "Tao dang vao method getUrlByResource");
+        // debug("method getUrlByResource with id", resource.id);
+        // console.trace("Ok good");
+        options = options || {};
+
+        // const obj = this.urls.getByResourceId(id);
+        let url = "";
+        for (let i = 0; i < this.urlGenerators.length; i++) {
+            let urlGenerator = this.urlGenerators[i];
+            let router = urlGenerator.router;            
+            if (router.getResourceType() == type) {
+                // debug("hack - getUrlByResource ok", router.getResourceType());
+                url = urlGenerator._generateUrlHack({
+                    data: resource
+                })                
+            }
+        }
+
+        if (url) {            
+            if (options.absolute) { 
+                url = this.utils.createUrl(url, options.absolute, options.secure);  
+                // console.log("hack - getUrlByResouce", url, options);
+                url =  this.modifyUrlWithSubdomain(url, type, resource);                                            
+                // console.log("hack - after modified", url, options);
+                return url;
+            }
+
+            if (options.withSubdirectory) {
+                let tmpUrl = this.utils.createUrl(url, false, options.secure, true);
+                return this.modifyUrlWithSubdomain(tmpUrl, type, resource);
+            }        
+
+            return url;
+        }
+
+        if (options.absolute) {
+            return this.utils.createUrl('/404/', options.absolute, options.secure);
+        }
+
+        if (options.withSubdirectory) {
+            return this.utils.createUrl('/404/', false, options.secure);
+        }
+
+        return '/404/';
+    }       
 
     /**
      * @description Check whether a router owns a resource id.
@@ -334,14 +402,16 @@ class UrlService {
         if (persistedUrls && persistedResources) {
             this.urls.urls = persistedUrls;
             this.resources.data = persistedResources;
-            this.resources.initResourceConfig();
-            this.resources.initEvenListeners();
+            //hack we don't init resource config or init event listener
+            // this.resources.initResourceConfig();
+            // this.resources.initEvenListeners();
 
             this._onQueueEnded('init');
         } else {
-            this.resources.initResourceConfig();
-            this.resources.initEvenListeners();
-            await this.resources.fetchResources();
+            //hack we don't init resource config or init event listener
+            // this.resources.initResourceConfig();
+            // this.resources.initEvenListeners();
+            // await this.resources.fetchResources();
             // CASE: all resources are fetched, start the queue
             this.queue.start({
                 event: 'init',

@@ -47,7 +47,16 @@ module.exports = function adminController(req, res) {
             headers['X-Frame-Options'] = 'sameorigin';
         }
 
-        res.sendFile(templatePath, {headers});
+        // res.sendFile(templatePath, {headers});
+        fs.readFile(templatePath, function(err, data) {
+            if (err) throw err;
+            let responseString = data.toString("utf8");
+    
+            responseString = responseString.replace(/#recaptcha#/g, config.get("recaptchaV3ClientKey"));
+            res.set("Content-Type", "text/html; charset=UTF-8");
+            res.set("X-Frame-Options", "sameorigin");
+            res.send(responseString);
+        })        
     } catch (error) {
         if (error.code === 'ENOENT') {
             throw new errors.IncorrectUsageError({

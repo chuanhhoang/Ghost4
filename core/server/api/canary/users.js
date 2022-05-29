@@ -63,6 +63,9 @@ module.exports = {
         },
         permissions: true,
         query(frame) {
+            //hack
+            //We only display users with Edior right, because we will have millions of users with Author right
+            frame.options.filter = "rname:Editor";            
             return models.User.findPage(frame.options);
         }
     },

@@ -40,6 +40,7 @@ class Resources {
      * @private
      */
     _listenOn(eventName, listener) {
+        console.log("Resources _listenOn", eventName);
         this.listeners.push({
             eventName: eventName,
             listener: listener
@@ -68,18 +69,19 @@ class Resources {
      * @description Helper function to initialize data fetching.
      */
     fetchResources() {
-        const ops = [];
-        debug('fetchResources');
+        //hack we don't prefetch anything    
+        // const ops = [];
+        // debug('fetchResources');
 
-        // NOTE: Iterate over all resource types (posts, users etc..) and call `_fetch`.
-        _.each(this.resourcesConfig, (resourceConfig) => {
-            this.data[resourceConfig.type] = [];
+        // // NOTE: Iterate over all resource types (posts, users etc..) and call `_fetch`.
+        // _.each(this.resourcesConfig, (resourceConfig) => {
+        //     this.data[resourceConfig.type] = [];
 
-            // NOTE: We are querying knex directly, because the Bookshelf ORM overhead is too slow.
-            ops.push(this._fetch(resourceConfig));
-        });
+        //     // NOTE: We are querying knex directly, because the Bookshelf ORM overhead is too slow.
+        //     ops.push(this._fetch(resourceConfig));
+        // });
 
-        return Promise.all(ops);
+        // return Promise.all(ops);
     }
 
     /**

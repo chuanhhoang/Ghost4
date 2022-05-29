@@ -51,6 +51,25 @@ User = ghostBookshelf.Model.extend({
 
     tableName: 'users',
 
+    filterExpansions() {
+        return [{
+            key: 'rname',
+            replacement: 'roles.name'
+        }];
+    },
+
+    filterRelations: function filterRelations() {
+        return {
+            roles: {
+                tableName: 'roles',
+                type: 'manyToMany',
+                joinTable: 'roles_users',
+                joinFrom: 'user_id',
+                joinTo: 'role_id'
+            }
+        };
+    },    
+
     defaults: function defaults() {
         return {
             password: security.identifier.uid(50),

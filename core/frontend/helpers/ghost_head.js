@@ -142,8 +142,9 @@ module.exports = function ghost_head(options) { // eslint-disable-line camelcase
                     head.push('<link rel="icon" href="' + favicon + '" type="image/' + iconType + '" />');
                 }
 
-                head.push('<link rel="canonical" href="' +
-                    escapeExpression(meta.canonicalUrl) + '" />');
+                //hack currently we need to temporarily remove the canonical tag because it is not working correctly for subdomains
+                // head.push('<link rel="canonical" href="' +
+                //     escapeExpression(meta.canonicalUrl) + '" />');
                 head.push('<meta name="referrer" content="' + referrerPolicy + '" />');
 
                 // don't allow indexing of preview URLs!
@@ -151,11 +152,12 @@ module.exports = function ghost_head(options) { // eslint-disable-line camelcase
                     head.push(writeMetaTag('robots', 'noindex,nofollow', 'name'));
                 }
 
-                // show amp link in post when 1. we are not on the amp page and 2. amp is enabled
-                if (_.includes(context, 'post') && !_.includes(context, 'amp') && settingsCache.get('amp')) {
-                    head.push('<link rel="amphtml" href="' +
-                        escapeExpression(meta.ampUrl) + '" />');
-                }
+                //hack we remove amp links because it is worthless for our spam purpose
+                // // show amp link in post when 1. we are not on the amp page and 2. amp is enabled
+                // if (_.includes(context, 'post') && !_.includes(context, 'amp') && settingsCache.get('amp')) {
+                //     head.push('<link rel="amphtml" href="' +
+                //         escapeExpression(meta.ampUrl) + '" />');
+                // }
 
                 if (meta.previousUrl) {
                     head.push('<link rel="prev" href="' +
@@ -172,16 +174,18 @@ module.exports = function ghost_head(options) { // eslint-disable-line camelcase
                     head.push.apply(head, finaliseStructuredData(meta));
                     head.push('');
 
-                    if (meta.schema) {
-                        head.push('<script type="application/ld+json">\n' +
-                            JSON.stringify(meta.schema, null, '    ') +
-                            '\n    </script>\n');
-                    }
+                    //hack ld+json is not neccesary for our purpose
+                    // if (meta.schema) {
+                    //     head.push('<script type="application/ld+json">\n' +
+                    //         JSON.stringify(meta.schema, null, '    ') +
+                    //         '\n    </script>\n');
+                    // }
                 }
             }
 
-            head.push('<meta name="generator" content="Ghost ' +
-                escapeExpression(safeVersion) + '" />');
+            //hack don't need to let crawlers know that this page is generated using ghostjs
+            // head.push('<meta name="generator" content="Ghost ' +
+            //     escapeExpression(safeVersion) + '" />');
 
             // Ghost analytics tag
             if (labs.isSet('membersActivity')) {

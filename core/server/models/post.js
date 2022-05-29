@@ -82,7 +82,9 @@ Post = ghostBookshelf.Model.extend({
         };
     },
 
-    relationships: ['tags', 'authors', 'mobiledoc_revisions', 'posts_meta', 'tiers'],
+    //hack: we remove mobiledoc revisions
+    // relationships: ['tags', 'authors', 'mobiledoc_revisions', 'posts_meta', 'tiers'],
+    relationships: ['tags', 'authors', 'posts_meta'],
 
     // NOTE: look up object, not super nice, but was easy to implement
     relationshipBelongsTo: {
@@ -744,50 +746,51 @@ Post = ghostBookshelf.Model.extend({
             });
         }
 
+        //hack - we remove mobiledoc revisions
         // CASE: Handle mobiledoc backups/revisions. This is a pure database feature.
-        if (model.hasChanged('mobiledoc') && !options.importing && !options.migrating) {
-            ops.push(function updateRevisions() {
-                return ghostBookshelf.model('MobiledocRevision')
-                    .findAll(Object.assign({
-                        filter: `post_id:${model.id}`,
-                        columns: ['id']
-                    }, _.pick(options, 'transacting')))
-                    .then((revisions) => {
-                        /**
-                         * Store prev + latest mobiledoc content, because we have decided against a migration, which
-                         * iterates over all posts and creates a copy of the current mobiledoc content.
-                         *
-                         * Reasons:
-                         *   - usually migrations for the post table are slow and error-prone
-                         *   - there is no need to create a copy for all posts now, because we only want to ensure
-                         *     that posts, which you are currently working on, are getting a content backup
-                         *   - no need to create revisions for existing published posts
-                         *
-                         * The feature is very minimal in the beginning. As soon as you update to this Ghost version,
-                         * you
-                         */
-                        if (!revisions.length && options.method !== 'insert') {
-                            model.set('mobiledoc_revisions', [{
-                                post_id: model.id,
-                                mobiledoc: model.previous('mobiledoc'),
-                                created_at_ts: Date.now() - 1
-                            }, {
-                                post_id: model.id,
-                                mobiledoc: model.get('mobiledoc'),
-                                created_at_ts: Date.now()
-                            }]);
-                        } else {
-                            const revisionsJSON = revisions.toJSON().slice(0, MOBILEDOC_REVISIONS_COUNT - 1);
+        // if (model.hasChanged('mobiledoc') && !options.importing && !options.migrating) {
+        //     ops.push(function updateRevisions() {
+        //         return ghostBookshelf.model('MobiledocRevision')
+        //             .findAll(Object.assign({
+        //                 filter: `post_id:${model.id}`,
+        //                 columns: ['id']
+        //             }, _.pick(options, 'transacting')))
+        //             .then((revisions) => {
+        //                 /**
+        //                  * Store prev + latest mobiledoc content, because we have decided against a migration, which
+        //                  * iterates over all posts and creates a copy of the current mobiledoc content.
+        //                  *
+        //                  * Reasons:
+        //                  *   - usually migrations for the post table are slow and error-prone
+        //                  *   - there is no need to create a copy for all posts now, because we only want to ensure
+        //                  *     that posts, which you are currently working on, are getting a content backup
+        //                  *   - no need to create revisions for existing published posts
+        //                  *
+        //                  * The feature is very minimal in the beginning. As soon as you update to this Ghost version,
+        //                  * you
+        //                  */
+        //                 if (!revisions.length && options.method !== 'insert') {
+        //                     model.set('mobiledoc_revisions', [{
+        //                         post_id: model.id,
+        //                         mobiledoc: model.previous('mobiledoc'),
+        //                         created_at_ts: Date.now() - 1
+        //                     }, {
+        //                         post_id: model.id,
+        //                         mobiledoc: model.get('mobiledoc'),
+        //                         created_at_ts: Date.now()
+        //                     }]);
+        //                 } else {
+        //                     const revisionsJSON = revisions.toJSON().slice(0, MOBILEDOC_REVISIONS_COUNT - 1);
 
-                            model.set('mobiledoc_revisions', revisionsJSON.concat([{
-                                post_id: model.id,
-                                mobiledoc: model.get('mobiledoc'),
-                                created_at_ts: Date.now()
-                            }]));
-                        }
-                    });
-            });
-        }
+        //                     model.set('mobiledoc_revisions', revisionsJSON.concat([{
+        //                         post_id: model.id,
+        //                         mobiledoc: model.get('mobiledoc'),
+        //                         created_at_ts: Date.now()
+        //                     }]));
+        //                 }
+        //             });
+        //     });
+        // }
 
         return sequence(ops);
     },
@@ -816,9 +819,10 @@ Post = ghostBookshelf.Model.extend({
             .query('orderBy', 'sort_order', 'ASC');
     },
 
-    mobiledoc_revisions() {
-        return this.hasMany('MobiledocRevision', 'post_id');
-    },
+    //hack: we remove mobiledoc revisions
+    // mobiledoc_revisions() {
+    //     return this.hasMany('MobiledocRevision', 'post_id');
+    // },
 
     posts_meta: function postsMeta() {
         return this.hasOne('PostsMeta', 'post_id');
@@ -1201,6 +1205,7 @@ Post = ghostBookshelf.Model.extend({
         let isEdit;
         let isAdd;
         let isDestroy;
+        let isAuthor;
 
         function isChanging(attr) {
             return unsafeAttrs[attr] && unsafeAttrs[attr] !== postModel.get(attr);
@@ -1219,6 +1224,7 @@ Post = ghostBookshelf.Model.extend({
         isAdmin = loadedPermissions.user && _.some(loadedPermissions.user.roles, {name: 'Administrator'});
         isEditor = loadedPermissions.user && _.some(loadedPermissions.user.roles, {name: 'Editor'});
         isIntegration = loadedPermissions.apiKey && _.some(loadedPermissions.apiKey.roles, {name: 'Admin Integration'});
+        isAuthor = loadedPermissions.user && _.some(loadedPermissions.user.roles, {name: 'Author'});
 
         isEdit = (action === 'edit');
         isAdd = (action === 'add');
@@ -1252,6 +1258,11 @@ Post = ghostBookshelf.Model.extend({
             // TODO: once contributors are able to edit existing tags, this can be removed
             // @TODO: we need a concept for making a diff between incoming tags and existing tags
             excludedAttrs.push('tags');
+        }
+
+        console.log("hack - I got here", isAuthor, isEdit, isAdd);        
+        if (isAuthor && (isEdit || isAdd)) {            
+            excludedAttrs.push('featured');   
         }
 
         if (hasUserPermission && hasApiKeyPermission) {

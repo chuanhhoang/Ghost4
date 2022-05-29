@@ -13,6 +13,7 @@ module.exports = (options) => {
 
     // FRONTEND
     const frontendApp = express('frontend');
+    frontendApp.set('trust proxy', 1);
 
     // Force SSL if blog url is set to https. The redirects handling must happen before asset and page routing,
     // otherwise we serve assets/pages with http. This can cause mixed content warnings in the admin client.

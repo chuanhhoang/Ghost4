@@ -83,13 +83,14 @@ class UrlGenerator {
      * @TODO: https://github.com/TryGhost/Ghost/issues/10699
      */
     regenerateResources() {
-        const myResources = this.urls.getByGeneratorId(this.uid);
+        //hack: we do not regenerate anything
+        // const myResources = this.urls.getByGeneratorId(this.uid);
 
-        myResources.forEach((object) => {
-            this.urls.removeResourceId(object.resource.data.id);
-            object.resource.release();
-            this._try(object.resource);
-        });
+        // myResources.forEach((object) => {
+        //     this.urls.removeResourceId(object.resource.data.id);
+        //     object.resource.release();
+        //     this._try(object.resource);
+        // });
     }
 
     /**
@@ -103,14 +104,17 @@ class UrlGenerator {
          * - init: bootstrap or url reset
          * - added: resource was added to the database
          */
-        this.queue.register({
-            event: 'init',
-            tolerance: 100
-        }, this._onInit.bind(this));
 
-        this.queue.register({
-            event: 'added'
-        }, this._onAdded.bind(this));
+        //hack
+        //We do not listen to anything. Every request, url will be generated again        
+        // this.queue.register({
+        //     event: 'init',
+        //     tolerance: 100
+        // }, this._onInit.bind(this));
+
+        // this.queue.register({
+        //     event: 'added'
+        // }, this._onAdded.bind(this));
     }
 
     /**
@@ -195,6 +199,21 @@ class UrlGenerator {
     _generateUrl(resource) {
         return localUtils.replacePermalink(this.permalink, resource.data);
     }
+
+    /**
+     * @description Generate url based on the permlink configuration of the target router.
+     *
+     * @NOTE We currently generate relative urls (https://github.com/TryGhost/Ghost/commit/7b0d5d465ba41073db0c3c72006da625fa11df32).
+     */
+     _generateUrlHack(resource) {
+        const permalink = this.permalink;
+        // debug("hack - _generateUrlHack", permalink);
+        // console.trace("hack - _generateUrlHack");
+        let url = localUtils.replacePermalink(permalink, resource.data); 
+        // debug("hack - _generateUrlHack url is", url);
+        // console.trace(url);
+        return localUtils.replacePermalink(permalink, resource.data);
+    }        
 
     /**
      * @description Helper function to register resource listeners.

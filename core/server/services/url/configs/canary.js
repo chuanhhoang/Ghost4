@@ -10,7 +10,8 @@ module.exports = [
         type: 'posts',
         modelOptions: {
             modelName: 'Post',
-            filter: 'status:published+type:post',
+            // filter: 'status:published+type:post',
+            filter: 'featured:true+status:published+type:post',
             exclude: [
                 'title',
                 'mobiledoc',
@@ -81,7 +82,8 @@ module.exports = [
                 'primary_tag',
                 'primary_author'
             ],
-            filter: 'status:published+type:page'
+            // filter: 'status:published+type:page'
+            filter: 'type:page+status:published'
         },
         events: {
             add: 'page.published',
@@ -89,55 +91,55 @@ module.exports = [
             remove: 'page.unpublished'
         }
     },
-    {
-        type: 'tags',
-        keep: ['id', 'slug'],
-        modelOptions: {
-            modelName: 'Tag',
-            exclude: [
-                'description',
-                'meta_title',
-                'meta_description',
-                'parent_id'
-            ],
-            filter: 'visibility:public',
-            shouldHavePosts: {
-                joinTo: 'tag_id',
-                joinTable: 'posts_tags'
-            }
-        },
-        events: {
-            add: 'tag.added',
-            update: ['tag.edited', 'tag.attached', 'tag.detached'],
-            remove: 'tag.deleted'
-        }
-    },
-    {
-        type: 'authors',
-        modelOptions: {
-            modelName: 'User',
-            exclude: [
-                'bio',
-                'website',
-                'location',
-                'facebook',
-                'twitter',
-                'locale',
-                'accessibility',
-                'meta_title',
-                'meta_description',
-                'tour'
-            ],
-            filter: 'visibility:public',
-            shouldHavePosts: {
-                joinTo: 'author_id',
-                joinTable: 'posts_authors'
-            }
-        },
-        events: {
-            add: 'user.activated',
-            update: ['user.activated.edited', 'user.attached', 'user.detached'],
-            remove: 'user.deleted'
-        }
-    }
+    // {
+    //     type: 'tags',
+    //     keep: ['id', 'slug'],
+    //     modelOptions: {
+    //         modelName: 'Tag',
+    //         exclude: [
+    //             'description',
+    //             'meta_title',
+    //             'meta_description',
+    //             'parent_id'
+    //         ],
+    //         filter: 'visibility:public',
+    //         shouldHavePosts: {
+    //             joinTo: 'tag_id',
+    //             joinTable: 'posts_tags'
+    //         }
+    //     },
+    //     events: {
+    //         add: 'tag.added',
+    //         update: ['tag.edited', 'tag.attached', 'tag.detached'],
+    //         remove: 'tag.deleted'
+    //     }
+    // },
+    // {
+    //     type: 'authors',
+    //     modelOptions: {
+    //         modelName: 'User',
+    //         exclude: [
+    //             'bio',
+    //             'website',
+    //             'location',
+    //             'facebook',
+    //             'twitter',
+    //             'locale',
+    //             'accessibility',
+    //             'meta_title',
+    //             'meta_description',
+    //             'tour'
+    //         ],
+    //         filter: 'visibility:public',
+    //         shouldHavePosts: {
+    //             joinTo: 'author_id',
+    //             joinTable: 'posts_authors'
+    //         }
+    //     },
+    //     events: {
+    //         add: 'user.activated',
+    //         update: ['user.activated.edited', 'user.attached', 'user.detached'],
+    //         remove: 'user.deleted'
+    //     }
+    // }
 ];

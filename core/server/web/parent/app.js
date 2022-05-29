@@ -8,6 +8,7 @@ module.exports = function setupParentApp() {
     debug('ParentApp setup start');
     const parentApp = express('parent');
 
+    parentApp.set('trust proxy', 1);
     parentApp.use(mw.requestId);
     parentApp.use(mw.logRequest);
 
